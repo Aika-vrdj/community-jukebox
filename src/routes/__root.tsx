@@ -86,8 +86,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Build community playlists from YouTube links and listen back-to-back.",
       },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "Sonarium — Community Playlists" },
+      {
+        property: "og:description",
+        content: "Build community playlists from YouTube links and listen back-to-back.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
