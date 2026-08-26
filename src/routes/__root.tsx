@@ -111,7 +111,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <head>
         <HeadContent />
       </head>
@@ -128,8 +128,16 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      {/* PlayerProvider is mounted at the true app root, outside <Outlet />,
+          so navigation never remounts the YouTube player. */}
+      <PlayerProvider>
+        <SiteHeader />
+        <main className="min-h-screen pb-32">
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </main>
+      </PlayerProvider>
+      <Toaster />
     </QueryClientProvider>
   );
 }
