@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { AUTH_DISABLED } from "@/lib/auth-config";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
