@@ -2,14 +2,6 @@ import type { Session, User } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
-import { AUTH_DISABLED } from "@/lib/auth-config";
-
-let guestSignInPromise: Promise<unknown> | null = null;
-
-function ensureGuestSession() {
-  guestSignInPromise ??= supabase.auth.signInAnonymously();
-  return guestSignInPromise;
-}
 
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
@@ -17,16 +9,8 @@ export function useAuth() {
 
   useEffect(() => {
     let active = true;
-    supabase.auth.getSession().then(async ({ data }) => {
+    supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
-      if (!data.session && AUTH_DISABLED) {
-        await ensureGuestSession();
-        const { data: next } = await supabase.auth.getSession();
-        if (!active) return;
-        setSession(next.session);
-        setLoading(false);
-        return;
-      }
       setSession(data.session);
       setLoading(false);
     });
@@ -43,10 +27,8 @@ export function useAuth() {
   return { session, user, loading };
 }
 
-
 export function displayNameOf(user: User | null): string {
   if (!user) return "";
-  if (AUTH_DISABLED) return "Guest (test mode)";
   const meta = user.user_metadata ?? {};
 
   return (
