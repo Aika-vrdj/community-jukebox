@@ -86,6 +86,7 @@ export type Database = {
       }
       playlists: {
         Row: {
+          cover_image_url: string | null
           created_at: string
           id: string
           is_hidden: boolean
@@ -94,6 +95,7 @@ export type Database = {
           owner_id: string
         }
         Insert: {
+          cover_image_url?: string | null
           created_at?: string
           id?: string
           is_hidden?: boolean
@@ -102,6 +104,7 @@ export type Database = {
           owner_id: string
         }
         Update: {
+          cover_image_url?: string | null
           created_at?: string
           id?: string
           is_hidden?: boolean
