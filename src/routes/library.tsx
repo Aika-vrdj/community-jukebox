@@ -1,12 +1,12 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Eye, EyeOff, Trash2 } from "lucide-react";
+import { Eye, EyeOff, ImagePlus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import type { Playlist } from "@/lib/playlists";
+import { uploadPlaylistCover, type Playlist } from "@/lib/playlists";
 
 export const Route = createFileRoute("/library")({
   head: () => ({
@@ -78,6 +78,17 @@ function LibraryPage() {
     void queryClient.invalidateQueries({ queryKey: ["public-playlists"] });
   }
 
+  async function onCoverSelected(id: string, file: File | undefined) {
+    if (!file) return;
+    try {
+      await uploadPlaylistCover(id, file);
+      void queryClient.invalidateQueries({ queryKey: ["my-playlists"] });
+      void queryClient.invalidateQueries({ queryKey: ["public-playlists"] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not upload cover image.");
+    }
+  }
+
   if (!user) return null;
 
   return (
@@ -111,6 +122,24 @@ function LibraryPage() {
       <ul className="mt-8 divide-y divide-border">
         {(playlists.data ?? []).map((p) => (
           <li key={p.id} className="flex items-center gap-3 py-3">
+            <label className="group relative h-10 w-10 shrink-0 cursor-pointer overflow-hidden rounded-md border border-border bg-secondary">
+              {p.cover_image_url ? (
+                <img src={p.cover_image_url} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                  <ImagePlus className="h-4 w-4" />
+                </div>
+              )}
+              <span className="absolute inset-0 flex items-center justify-center bg-black/60 text-[10px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+                Edit
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => void onCoverSelected(p.id, e.target.files?.[0])}
+              />
+            </label>
             <Link
               to="/playlist/$playlistId"
               params={{ playlistId: p.id }}
