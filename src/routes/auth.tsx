@@ -28,8 +28,11 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (user) void navigate({ to: "/library" });
+    if (AUTH_DISABLED || user) void navigate({ to: "/library" });
   }, [user, navigate]);
+
+  if (AUTH_DISABLED) return null;
+
 
   async function signIn() {
     setBusy(true);
