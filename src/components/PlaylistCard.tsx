@@ -41,13 +41,25 @@ export function PlaylistCard({ playlist }: { playlist: PlaylistWithMeta }) {
         <Link
           to="/playlist/$playlistId"
           params={{ playlistId: playlist.id }}
-          className="min-w-0"
+          className="flex min-w-0 items-center gap-3"
         >
-          <h3 className="truncate text-sm font-medium text-foreground">{playlist.name}</h3>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {playlist.songs} {playlist.songs === 1 ? "song" : "songs"}
-            {playlist.is_public ? " · open to everyone" : " · private"}
-          </p>
+          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md border border-border bg-secondary">
+            {playlist.cover_image_url ? (
+              <img src={playlist.cover_image_url} alt="" className="h-full w-full object-cover" />
+            ) : null}
+          </div>
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-medium text-foreground">{playlist.name}</h3>
+            {playlist.owner_name ? (
+              <p className="truncate text-xs text-muted-foreground">
+                by @{playlist.owner_name}
+              </p>
+            ) : null}
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {playlist.songs} {playlist.songs === 1 ? "song" : "songs"}
+              {playlist.is_public ? " · open to everyone" : " · private"}
+            </p>
+          </div>
         </Link>
         <button
           onClick={() => void onVote()}
