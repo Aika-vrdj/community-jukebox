@@ -46,7 +46,9 @@ export function useAuth() {
 
 export function displayNameOf(user: User | null): string {
   if (!user) return "";
+  if (AUTH_DISABLED) return "Guest (test mode)";
   const meta = user.user_metadata ?? {};
+
   return (
     (meta["full_name"] as string) ??
     (meta["name"] as string) ??
