@@ -1,13 +1,13 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Play, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ImagePlus, Play, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { usePlayer } from "@/components/player/PlayerProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchPlaylistSongs, type Playlist } from "@/lib/playlists";
+import { fetchPlaylistSongs, fetchProfiles, uploadPlaylistCover, type Playlist } from "@/lib/playlists";
 import { extractVideoId, formatTime } from "@/lib/youtube";
 import { fetchVideoMeta } from "@/lib/youtube.functions";
 
@@ -38,6 +38,8 @@ function PlaylistPage() {
   const { playQueue } = usePlayer();
   const [url, setUrl] = useState("");
   const [adding, setAdding] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const playlist = useQuery({
     queryKey: ["playlist", playlistId],
@@ -51,6 +53,29 @@ function PlaylistPage() {
       return (data as Playlist) ?? null;
     },
   });
+
+  const owner = useQuery({
+    queryKey: ["playlist-owner", playlist.data?.owner_id],
+    queryFn: async () => {
+      if (!playlist.data) return null;
+      const profiles = await fetchProfiles([playlist.data.owner_id]);
+      return profiles[playlist.data.owner_id] ?? null;
+    },
+    enabled: Boolean(playlist.data),
+  });
+
+  async function onCoverSelected(file: File | undefined) {
+    if (!file || !playlist.data) return;
+    setUploadingCover(true);
+    try {
+      await uploadPlaylistCover(playlist.data.id, file);
+      void queryClient.invalidateQueries({ queryKey: ["playlist", playlistId] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not upload cover image.");
+    } finally {
+      setUploadingCover(false);
+    }
+  }
 
   const songs = useQuery({
     queryKey: ["playlist-songs", playlistId],
@@ -125,18 +150,58 @@ function PlaylistPage() {
   }
 
   const list = songs.data ?? [];
+  const isOwner = Boolean(user && playlist.data && user.id === playlist.data.owner_id);
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-40 pt-10 sm:px-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            {playlist.data.name}
-          </h1>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {list.length} {list.length === 1 ? "song" : "songs"} ·{" "}
-            {playlist.data.is_public ? "anyone can add songs" : "only the owner can add songs"}
-          </p>
+        <div className="flex items-end gap-4">
+          <div className="group relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-border bg-secondary sm:h-28 sm:w-28">
+            {playlist.data.cover_image_url ? (
+              <img
+                src={playlist.data.cover_image_url}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : list[0]?.thumbnail_url ? (
+              <img src={list[0].thumbnail_url} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                <ImagePlus className="h-6 w-6" />
+              </div>
+            )}
+            {isOwner ? (
+              <button
+                onClick={() => coverInputRef.current?.click()}
+                disabled={uploadingCover}
+                aria-label="Change cover image"
+                className="absolute inset-0 flex items-center justify-center bg-black/60 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100 disabled:opacity-100"
+              >
+                {uploadingCover ? "Uploading…" : "Change cover"}
+              </button>
+            ) : null}
+            <input
+              ref={coverInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => void onCoverSelected(e.target.files?.[0])}
+            />
+          </div>
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+              {playlist.data.name}
+            </h1>
+            {owner.data?.display_name ? (
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Created by <span className="text-foreground">@{owner.data.display_name}</span>
+              </p>
+            ) : null}
+            <p className="mt-1 text-xs text-muted-foreground">
+              {list.length} {list.length === 1 ? "song" : "songs"} ·{" "}
+              {playlist.data.is_public ? "anyone can add songs" : "only the owner can add songs"}
+            </p>
+          </div>
         </div>
         <button
           onClick={() => {
