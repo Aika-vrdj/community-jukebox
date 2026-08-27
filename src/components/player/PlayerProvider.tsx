@@ -105,10 +105,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   const goTo = useCallback((nextIndex: number) => {
     const { queue: q } = stateRef.current;
-    if (nextIndex < 0 || nextIndex >= q.length) {
+    if (q.length === 0) {
       setIsPlaying(false);
       return;
     }
+    // Loop the queue: past the last song wraps to the first, before the first wraps to the last.
+    if (nextIndex >= q.length) nextIndex = 0;
+    if (nextIndex < 0) nextIndex = q.length - 1;
     setIndex(nextIndex);
     setPosition(0);
     const song = q[nextIndex];
