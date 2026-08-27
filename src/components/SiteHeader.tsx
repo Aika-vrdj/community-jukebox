@@ -3,9 +3,11 @@ import { LogOut } from "lucide-react";
 
 import { displayNameOf, useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { AUTH_DISABLED } from "@/lib/auth-config";
 
 export function SiteHeader() {
   const { user } = useAuth();
+
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
@@ -29,7 +31,11 @@ export function SiteHeader() {
           >
             My playlists
           </Link>
-          {user ? (
+          {AUTH_DISABLED ? (
+            <span className="ml-2 rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground">
+              {displayNameOf(user) || "Guest (test mode)"}
+            </span>
+          ) : user ? (
             <div className="flex items-center gap-2 pl-2">
               <span className="hidden max-w-32 truncate text-xs text-muted-foreground sm:block">
                 {displayNameOf(user)}
@@ -50,6 +56,7 @@ export function SiteHeader() {
               Sign in
             </Link>
           )}
+
         </nav>
       </div>
     </header>
